@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG System with Observability</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .observability-info {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .main {
+            padding: 40px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.ready {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .init-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .init-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .init-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .init-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .session-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            border-left: 4px solid #007bff;
+        }
+        
+        .chat-messages {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .message.user {
+            background: #e3f2fd;
+            margin-left: 50px;
+        }
+        
+        .message.assistant {
+            background: #f1f8e9;
+            margin-right: 50px;
+        }
+        
+        .message.error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        
+        .message.system {
+            background: #f5f5f5;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .message-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .user .message-label {
+            color: #1976d2;
+        }
+        
+        .assistant .message-label {
+            color: #388e3c;
+        }
+        
+        .system .message-label {
+            color: #2196F3;
+        }
+        
+        .input-section {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .question-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .question-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .ask-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .ask-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .ask-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .example-category {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .example-category h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .example-question {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+        }
+        
+        .example-question:hover {
+            background: #e3f2fd;
+            border-color: #667eea;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Agentic RAG System</h1>
+            <p>Ask questions about the McKinsey AI Report, search the web, or find academic papers</p>
+            <div class="observability-info">
+                Enhanced with Langfuse Observability for detailed conversation tracking
+            </div>
+        </div>
+        
+        <div class="main">
+            <div id="status" class="status loading">
+                Initializing system with observability...
+            </div>
+            
+            <div id="initSection" class="init-section">
+                <button id="initButton" class="init-button">Initialize System</button>
+                <p>Click to load the McKinsey report and initialize the AI system with observability</p>
+            </div>
+            
+            <div id="chatSection" class="chat-container hidden">
+                <div class="session-info" id="sessionInfo">
+                    Session tracking enabled • User: <span id="userId">anonymous</span> • Session: <span id="sessionId">-</span>
+                </div>
+                
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message system">
+                        <div class="message-label">System</div>
+                        <div>Welcome! I can help you with questions about the McKinsey AI Report, current web information, or academic research. All conversations are tracked with Langfuse for quality monitoring.</div>
+                    </div>
+                </div>
+                
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Processing your question...</p>
+                </div>
+                
+                <div class="input-section">
+                    <input 
+                        type="text" 
+                        id="questionInput" 
+                        class="question-input" 
+                        placeholder="Ask me anything..."
+                        disabled
+                    >
+                    <button id="askButton" class="ask-button" disabled>Ask</button>
+                </div>
+            </div>
+            
+            <div class="examples" id="examples">
+                <div class="example-category">
+                    <h3>McKinsey Report Questions</h3>
+                    <div class="example-question" data-question="Who is Lareina Yee according to the document?">Who is Lareina Yee according to the document?</div>
+                    <div class="example-question" data-question="What does Alexander Sukharevsky say about AI implementation?">What does Alexander Sukharevsky say about AI implementation?</div>
+                    <div class="example-question" data-question="What percentage of organizations use AI according to the report?">What percentage of organizations use AI according to the report?</div>
+                    <div class="example-question" data-question="What are the main organizational changes for AI adoption?">What are the main organizational changes for AI adoption?</div>
+                </div>
+                <div class="example-category">
+                    <h3>Web Search Questions</h3>
+                    <div class="example-question" data-question="What's the latest news about ChatGPT?">What's the latest news about ChatGPT?</div>
+                    <div class="example-question" data-question="Recent developments in AI regulation">Recent developments in AI regulation</div>
+                    <div class="example-question" data-question="Current trends in artificial intelligence">Current trends in artificial intelligence</div>
+                    <div class="example-question" data-question="Latest OpenAI announcements">Latest OpenAI announcements</div>
+                </div>
+                <div class="example-category">
+                    <h3>Academic Research Questions</h3>
+                    <div class="example-question" data-question="Find recent papers on AI safety">Find recent papers on AI safety</div>
+                    <div class="example-question" data-question="Academic research on large language models">Academic research on large language models</div>
+                    <div class="example-question" data-question="Papers about AI governance">Papers about AI governance</div>
+                    <div class="example-question" data-question="Studies on AI bias and fairness">Studies on AI bias and fairness</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let systemInitialized = false;
+        let sessionId = null;
+        let userId = 'anonymous';
+
+        // DOM elements
+        const statusDiv = document.getElementById('status');
+        const initSection = document.getElementById('initSection');
+        const chatSection = document.getElementById('chatSection');
+        const initButton = document.getElementById('initButton');
+        const chatMessages = document.getElementById('chatMessages');
+        const questionInput = document.getElementById('questionInput');
+        const askButton = document.getElementById('askButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const sessionIdSpan = document.getElementById('sessionId');
+        const userIdSpan = document.getElementById('userId');
+
+        // Generate session ID
+        function generateSessionId() {
+            return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+
+        // Initialize button click handler
+        initButton.addEventListener('click', initializeSystem);
+
+        // Handle Enter key in input
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !askButton.disabled) {
+                askQuestion();
+            }
+        });
+
+        // Ask button click handler
+        askButton.addEventListener('click', askQuestion);
+
+        // Example question click handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('example-question')) {
+                const question = e.target.getAttribute('data-question');
+                if (systemInitialized) {
+                    questionInput.value = question;
+                    questionInput.focus();
+                }
+            }
+        });
+
+        async function initializeSystem() {
+            try {
+                initButton.disabled = true;
+                statusDiv.className = 'status loading';
+                statusDiv.innerHTML = 'Initializing system with observability... Please wait...';
+
+                const response = await fetch('/api/initialize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    systemInitialized = true;
+                    sessionId = generateSessionId();
+                    
+                    // Update UI
+                    statusDiv.className = 'status ready';
+                    statusDiv.innerHTML = 'System ready with Langfuse observability! You can now ask questions.';
+                    
+                    // Update session info
+                    sessionIdSpan.textContent = sessionId;
+                    userIdSpan.textContent = userId;
+                    
+                    // Hide init section and show chat section
+                    initSection.classList.add('hidden');
+                    chatSection.classList.remove('hidden');
+                    
+                    questionInput.disabled = false;
+                    askButton.disabled = false;
+                    questionInput.focus();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `Error initializing system: ${error.message}`;
+                initButton.disabled = false;
+            }
+        }
+
+        async function askQuestion() {
+            const question = questionInput.value.trim();
+            if (!question || !systemInitialized) return;
+
+            // Add user message
+            addMessage('user', question);
+            
+            // Clear input and disable button
+            questionInput.value = '';
+            askButton.disabled = true;
+            questionInput.disabled = true;
+            loadingSpinner.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        session_id: sessionId,
+                        user_id: userId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    addMessage('assistant', data.answer);
+                } else {
+                    addMessage('error', `Error: ${data.message}`);
+                }
+            } catch (error) {
+                addMessage('error', `Network error: ${error.message}`);
+            } finally {
+                // Re-enable input and button
+                askButton.disabled = false;
+                questionInput.disabled = false;
+                loadingSpinner.style.display = 'none';
+                questionInput.focus();
+            }
+        }
+
+        function addMessage(type, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'message-label';
+            labelDiv.textContent = type === 'user' ? 'You' : type === 'error' ? 'Error' : 'Assistant';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(labelDiv);
+            messageDiv.appendChild(contentDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Set initial status
+        statusDiv.className = 'status loading';
+        statusDiv.innerHTML = 'Ready to initialize with observability. Click the button below to start.';
+    </script>
+</body>
+</html>

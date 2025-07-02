@@ -1,0 +1,27 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Vector database
+chroma_db/
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Data files (optional)
+data/*.pdf
+
+# Logs
+*.log
+logs/
