@@ -58,8 +58,8 @@ OPENAI_API_KEY=your_openai_api_key_here
 SERPAPI_API_KEY=your_serpapi_key_here
 
 # Langfuse Observability Keys
-LANGFUSE_PUBLIC_KEY=pk-lf-c4c6fc13-df42-46bb-8825-dbe6f1fb305f
-LANGFUSE_SECRET_KEY=sk-lf-c408f596-ceb6-4024-958c-1755a51d56f3
+LANGFUSE_PUBLIC_KEY=''
+LANGFUSE_SECRET_KEY=''
 LANGFUSE_HOST=https://cloud.langfuse.com
 
 # Enable/Disable Observability
